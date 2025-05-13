@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <path d="M363 63L257 0 151 63v126l106 63 106-63V63z" fill="#FFD700" stroke="#C9A81A" stroke-width="8" />
+  <path d="M245 220l-94-56V62l94 56v102zm24 0l94-56V62l-94 56v102z" fill="#B59316" />
+  <path d="M363 323l-106-63-106 63v126l106 63 106-63V323z" fill="#FFD700" stroke="#C9A81A" stroke-width="8" />
+  <path d="M245 480l-94-56V322l94 56v102zm24 0l94-56V322l-94 56v102z" fill="#B59316" />
+  <path d="M151 193L45 130V4l106 63v126z" fill="#FFD700" stroke="#C9A81A" stroke-width="8" />
+  <path d="M139 180l-82-48V36l82 48v96z" fill="#B59316" />
+  <path d="M363 193l106-63V4L363 67v126z" fill="#FFD700" stroke="#C9A81A" stroke-width="8" />
+  <path d="M375 180l82-48V36l-82 48v96z" fill="#B59316" />
+  <path d="M151 323L45 386v126l106-63V323z" fill="#FFD700" stroke="#C9A81A" stroke-width="8" />
+  <path d="M139 332l-82 48v96l82-48v-96z" fill="#B59316" />
+  <path d="M363 323l106 63v126l-106-63V323z" fill="#FFD700" stroke="#C9A81A" stroke-width="8" />
+  <path d="M375 332l82 48v96l-82-48v-96z" fill="#B59316" />
+  <path d="M280 140l-22-12-22 12v24l22 12 22-12v-24z" fill="#FF5722" />
+  <path d="M280 348l-22-12-22 12v24l22 12 22-12v-24z" fill="#FF5722" />
+</svg>

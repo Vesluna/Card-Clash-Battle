@@ -1,0 +1,23 @@
+// Card data with effects and visuals
+export const cards = [
+  { name: "Flame Warrior", emoji: "🔥", power: 5, ability: "Burn", effect: "Burn" },
+  { name: "Ice Mage", emoji: "❄️", power: 4, ability: "Freeze", effect: "Freeze" },
+  { name: "Shadow Thief", emoji: "🕵️", power: 3, ability: "Steal", effect: "Steal" },
+  { name: "Guardian Knight", emoji: "🛡️", power: 6, ability: "Shield", effect: "Shield" },
+  { name: "Mind Seer", emoji: "👁️", power: 2, ability: "Reveal Hand", effect: "RevealHand" },
+  { name: "Dice Goblin", emoji: "🎲", power: 1, ability: "Dice Roll", effect: "DiceRoll" },
+  { name: "Thunder Archer", emoji: "🏹", power: 4, ability: "Shock", effect: "Shock" },
+  { name: "Earth Golem", emoji: "🗿", power: 7, ability: "Sturdy", effect: "Sturdy" },
+  { name: "Wind Sprite", emoji: "🌪️", power: 3, ability: "Gust", effect: "Gust" },
+  { name: "Water Healer", emoji: "💧", power: 2, ability: "Heal", effect: "Heal" },
+  { name: "Dark Assassin", emoji: "🗡️", power: 5, ability: "Poison", effect: "Poison" },
+  { name: "Light Paladin", emoji: "⚔️", power: 6, ability: "Protect", effect: "Protect" },
+  { name: "Arcane Wizard", emoji: "🧙", power: 4, ability: "Spellcast", effect: "Spellcast" },
+  { name: "Beast Tamer", emoji: "🐾", power: 3, ability: "Summon", effect: "Summon" },
+  { name: "Mystic Oracle", emoji: "🔮", power: 2, ability: "Foresight", effect: "Foresight" },
+  { name: "Chaos Sorcerer", emoji: "🌀", power: 5, ability: "Chaos", effect: "Chaos" },
+  { name: "Battle Angel", emoji: "👼", power: 5, ability: "Heal", effect: "Heal" },
+  { name: "Demonic Knight", emoji: "😈", power: 6, ability: "Burn", effect: "Burn" },
+  { name: "Forest Ranger", emoji: "🏹", power: 4, ability: "Summon", effect: "Summon" },
+  { name: "Mountain Giant", emoji: "🏔️", power: 8, ability: "Sturdy", effect: "Sturdy" },
+];

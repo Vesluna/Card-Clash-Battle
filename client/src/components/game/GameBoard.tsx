@@ -1,0 +1,254 @@
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useCardGame } from "@/lib/stores/useCardGame";
+import Card from "./Card";
+import HealthBar from "./HealthBar";
+import GameLog from "./GameLog";
+import { useAudio } from "@/lib/stores/useAudio";
+
+const GameBoard = () => {
+  const { player, enemy, drawHands, playCard, backToTitle, logs } = useCardGame();
+  const [enemyHandVisible, setEnemyHandVisible] = useState(false);
+  const [enemyCardPlaying, setEnemyCardPlaying] = useState<number | null>(null);
+  const [playerCardPlaying, setPlayerCardPlaying] = useState<number | null>(null);
+  const [gameAction, setGameAction] = useState<'idle' | 'player-turn' | 'enemy-turn' | 'round-complete'>('idle');
+  const { playHit } = useAudio();
+
+  useEffect(() => {
+    // Draw initial hands when component mounts
+    drawHands();
+  }, [drawHands]);
+
+  // Function to handle playing a card
+  const handlePlayCard = (index: number) => {
+    if (gameAction !== 'idle') return;
+    
+    // Start the card play sequence
+    setGameAction('player-turn');
+    setPlayerCardPlaying(index);
+    
+    // Play sound effect
+    playHit();
+    
+    // After a short delay for animation, execute the card action
+    setTimeout(() => {
+      // Choose a random enemy card
+      const enemyIndex = Math.floor(Math.random() * (enemy?.hand?.length || 1));
+      setEnemyCardPlaying(enemyIndex);
+      setGameAction('enemy-turn');
+      
+      // After enemy card animation, complete the play
+      setTimeout(() => {
+        playCard(index);
+        setGameAction('round-complete');
+        
+        // Reset for next turn
+        setTimeout(() => {
+          setPlayerCardPlaying(null);
+          setEnemyCardPlaying(null);
+          setEnemyHandVisible(false);
+          setGameAction('idle');
+        }, 1000);
+      }, 1000);
+    }, 1000);
+  };
+
+  if (!player || !enemy) {
+    return <div className="text-white">Loading...</div>;
+  }
+
+  return (
+    <motion.div 
+      className="flex flex-col h-full w-full p-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      {/* Battle header with health bars */}
+      <div className="bg-gradient-to-r from-gray-900/80 to-gray-800/80 rounded-lg p-4 mb-4 shadow-lg backdrop-blur-sm">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="w-full md:w-5/12 flex flex-col">
+            <div className="font-medievalsharp text-lg text-amber-300">
+              {player.name} <span className="text-amber-200">{getRarityBadge(player.rarity)}</span>
+            </div>
+            <HealthBar 
+              current={player.hp} 
+              max={getBaseHP(player.name)} 
+              player={true} 
+              shield={player.shield}
+            />
+          </div>
+          
+          <div className="text-amber-400 font-bold text-lg">VS</div>
+          
+          <div className="w-full md:w-5/12 flex flex-col">
+            <div className="font-medievalsharp text-lg text-red-300">
+              {enemy.name} <span className="text-red-200">{getRarityBadge(enemy.rarity)}</span>
+            </div>
+            <HealthBar 
+              current={enemy.hp} 
+              max={getBaseHP(enemy.name)} 
+              player={false} 
+              shield={enemy.shield}
+            />
+          </div>
+        </div>
+      </div>
+      
+      {/* Game area */}
+      <div className="flex-grow flex flex-col md:flex-row gap-4">
+        {/* Enemy hand area */}
+        <div className="w-full md:w-1/4 relative">
+          <motion.div 
+            className="bg-gradient-to-b from-gray-900/70 to-gray-800/70 h-full rounded-lg p-4 shadow-lg backdrop-blur-sm overflow-y-auto"
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <h3 className="text-red-300 font-medievalsharp mb-2">Enemy Cards</h3>
+            
+            {enemyHandVisible ? (
+              <div className="space-y-2">
+                {enemy.hand.map((card, idx) => (
+                  <motion.div 
+                    key={`enemy-card-${idx}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ 
+                      opacity: 1, 
+                      y: 0,
+                      scale: enemyCardPlaying === idx ? 1.05 : 1,
+                      boxShadow: enemyCardPlaying === idx ? 
+                        "0 0 15px rgba(220, 38, 38, 0.7)" : "none"
+                    }}
+                    transition={{ delay: idx * 0.1 }}
+                  >
+                    <Card card={card} isEnemy={true} />
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full">
+                <p className="text-gray-400 text-center mb-4">Enemy's hand is hidden</p>
+                {enemy.hand.map((_, idx) => (
+                  <motion.div 
+                    key={`enemy-back-${idx}`}
+                    className="w-full h-16 mb-2 bg-gradient-to-r from-red-900 to-red-800 rounded border border-red-700 flex items-center justify-center text-2xl"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                  >
+                    🎴
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        </div>
+        
+        {/* Battle log area */}
+        <motion.div 
+          className="flex-grow"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          <GameLog logs={logs} />
+        </motion.div>
+        
+        {/* Player hand area */}
+        <div className="w-full md:w-1/3">
+          <motion.div 
+            className="bg-gradient-to-b from-gray-900/70 to-gray-800/70 h-full rounded-lg p-4 shadow-lg backdrop-blur-sm overflow-y-auto"
+            initial={{ x: 20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            <h3 className="text-amber-300 font-medievalsharp mb-2">Your Cards</h3>
+            
+            <div className="space-y-2">
+              {player.hand.map((card, idx) => (
+                <AnimatePresence key={`player-card-${idx}`} mode="popLayout">
+                  <motion.div
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ 
+                      opacity: 1, 
+                      y: 0,
+                      scale: playerCardPlaying === idx ? 1.05 : 1,
+                      boxShadow: playerCardPlaying === idx ? 
+                        "0 0 15px rgba(245, 158, 11, 0.7)" : "none"
+                    }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ delay: idx * 0.1 }}
+                    whileHover={{ scale: gameAction === 'idle' ? 1.02 : 1 }}
+                  >
+                    <Card 
+                      card={card} 
+                      onClick={() => gameAction === 'idle' && handlePlayCard(idx)} 
+                      disabled={gameAction !== 'idle'}
+                    />
+                  </motion.div>
+                </AnimatePresence>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </div>
+      
+      {/* Back button */}
+      <motion.div 
+        className="mt-4 text-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6 }}
+      >
+        <button 
+          onClick={backToTitle}
+          className="text-amber-300 hover:text-amber-100 transition-colors"
+        >
+          Abandon Battle
+        </button>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+// Helper functions
+const getBaseHP = (name: string): number => {
+  const charMap: Record<string, number> = {
+    'Squire': 30,
+    'Rogue': 28,
+    'Mage': 25,
+    'Knight': 35,
+    'Dragon Lord': 40,
+    'Phoenix Rider': 38,
+    'Celestial Guardian': 45,
+    'Forest Druid': 32,
+    'Berserker': 33,
+    'Necromancer': 27,
+    'Paladin': 36,
+    'Warlock': 29,
+    'Valkyrie': 37,
+    'Titan': 42,
+    'Monk': 31,
+    'Assassin': 26
+  };
+  
+  return charMap[name] || 30;
+};
+
+const getRarityBadge = (rarity: string) => {
+  const colors: Record<string, string> = {
+    'Common': 'text-gray-300',
+    'Uncommon': 'text-green-300',
+    'Rare': 'text-blue-300',
+    'Epic': 'text-purple-300',
+    'Legendary': 'text-amber-300',
+    'Mythic': 'text-pink-300',
+    'Divine': 'text-yellow-300'
+  };
+  
+  return <span className={`text-xs ${colors[rarity]}`}>({rarity})</span>;
+};
+
+export default GameBoard;
