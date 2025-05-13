@@ -638,17 +638,46 @@ export const useCardGame = create<GameStore>((set, get) => ({
       newState.player = updatedPlayer;
       newState.enemy = updatedEnemy;
       
-      // Draw new cards
-      const newPlayerHand = updatedPlayer.hand.filter((_, i) => i !== index);
-      const newEnemyHand = updatedEnemy.hand.filter((_, i) => i !== enemyCardIndex);
+      // Draw new cards from the deck
+      const drawCardFromDeck = (character: Character): Card => {
+        // If deck is empty, shuffle discard pile back into deck
+        if (character.deck.length === 0) {
+          if (character.discardPile.length === 0) {
+            // Both deck and discard pile are empty, generate new random card
+            return structuredClone(cards[Math.floor(Math.random() * cards.length)]);
+          }
+          
+          // Shuffle discard pile and make it the new deck
+          character.deck = [...character.discardPile];
+          character.discardPile = [];
+          
+          // Shuffle the deck
+          for (let i = character.deck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [character.deck[i], character.deck[j]] = [character.deck[j], character.deck[i]];
+          }
+          
+          // Add a log about reshuffling
+          newState.logs.push(`${character.name}'s deck has been reshuffled.`);
+        }
+        
+        // Draw from the top of the deck
+        return character.deck.pop() || structuredClone(cards[Math.floor(Math.random() * cards.length)]);
+      };
       
-      // Add a new card to each hand if there are less than 4 cards
-      if (newPlayerHand.length < 4) {
-        newPlayerHand.push(structuredClone(cards[Math.floor(Math.random() * cards.length)]));
+      // Add a new card to each hand if there are less than the required number
+      const handSize = get().gameMode === 'blitz' ? 3 : (get().gameMode === 'tactical' ? 4 : 5);
+      
+      // Player draws cards
+      if (updatedPlayer.hand.length < handSize) {
+        // Draw a card from the deck
+        updatedPlayer.hand.push(drawCardFromDeck(updatedPlayer));
       }
       
-      if (newEnemyHand.length < 4) {
-        newEnemyHand.push(structuredClone(cards[Math.floor(Math.random() * cards.length)]));
+      // Enemy draws cards
+      if (updatedEnemy.hand.length < handSize) {
+        // Draw a card from the deck
+        updatedEnemy.hand.push(drawCardFromDeck(updatedEnemy));
       }
       
       newState.player.hand = newPlayerHand;
