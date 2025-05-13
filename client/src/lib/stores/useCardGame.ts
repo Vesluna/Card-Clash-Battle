@@ -40,6 +40,9 @@ interface GameStore {
   logs: string[];
   achievements: Achievement[];
   tutorialStep: number;
+  shieldCounter?: number;
+  burnCounter?: number;
+  freezeCounter?: number;
   
   // Actions
   startCharacterSelection: () => void;
@@ -106,6 +109,9 @@ export const useCardGame = create<GameStore>((set, get) => ({
   logs: [],
   achievements: initialAchievements,
   tutorialStep: 0,
+  shieldCounter: 0,
+  burnCounter: 0,
+  freezeCounter: 0,
   
   startCharacterSelection: () => {
     set({ gameState: "selection" });
@@ -161,7 +167,11 @@ export const useCardGame = create<GameStore>((set, get) => ({
       gameState: "title", 
       player: null, 
       enemy: null, 
-      logs: [] 
+      logs: [],
+      // Reset counters when going back to title
+      shieldCounter: 0,
+      burnCounter: 0,
+      freezeCounter: 0
     });
   },
   
@@ -208,6 +218,11 @@ export const useCardGame = create<GameStore>((set, get) => ({
       const enemyCardIndex = Math.floor(Math.random() * updatedEnemy.hand.length);
       const enemyCard = updatedEnemy.hand[enemyCardIndex];
       
+      // Track effect counters for achievements
+      let shieldUsed = false;
+      let burnUsed = false;
+      let freezeUsed = false;
+      
       // Log card played
       newState.logs = [
         ...newState.logs, 
@@ -215,9 +230,70 @@ export const useCardGame = create<GameStore>((set, get) => ({
         `Enemy played: ${enemyCard.name} (${enemyCard.ability})`
       ];
       
-      // Apply card effects
-      applyEffect(playerCard, enemyCard, updatedPlayer, updatedEnemy, newState);
-      applyEffect(enemyCard, playerCard, updatedEnemy, updatedPlayer, newState);
+      // Apply player card effects first
+      if (playerCard.effect && typeof playerCard.effect === 'string') {
+        const effectKey = playerCard.effect as keyof typeof cardEffects;
+        if (cardEffects[effectKey]) {
+          try {
+            // Apply the effect and get the result message
+            const resultMessage = cardEffects[effectKey](
+              playerCard, 
+              enemyCard, 
+              updatedPlayer, 
+              updatedEnemy, 
+              () => { newState.logs.push("Enemy hand revealed!"); }
+            );
+            
+            // Log the effect result
+            newState.logs.push(resultMessage);
+            
+            // Track effects for achievements
+            if (playerCard.effect === 'Shield' || playerCard.effect === 'Protect' || 
+                playerCard.effect === 'Ethereal' || playerCard.effect === 'Crystallize') {
+              shieldUsed = true;
+            }
+            
+            if (playerCard.effect === 'Burn') {
+              burnUsed = true;
+            }
+            
+            if (playerCard.effect === 'Freeze') {
+              freezeUsed = true;
+            }
+            
+            // Handle special case for Rewind effect - add another card
+            if (playerCard.effect === 'Rewind') {
+              updatedPlayer.hand.push(structuredClone(cards[Math.floor(Math.random() * cards.length)]));
+            }
+          } catch (error) {
+            console.error(`Error applying effect of ${playerCard.name}:`, error);
+            newState.logs.push(`Effect of ${playerCard.name} failed!`);
+          }
+        }
+      }
+      
+      // Then apply enemy card effects
+      if (enemyCard.effect && typeof enemyCard.effect === 'string') {
+        const effectKey = enemyCard.effect as keyof typeof cardEffects;
+        if (cardEffects[effectKey]) {
+          try {
+            // Apply the effect and get the result message
+            const resultMessage = cardEffects[effectKey](
+              enemyCard, 
+              playerCard, 
+              updatedEnemy, 
+              updatedPlayer, 
+              () => {}
+            );
+            
+            // Log the effect result
+            newState.logs.push(`Enemy's ${resultMessage}`);
+          } catch (error) {
+            console.error(`Error applying effect of ${enemyCard.name}:`, error);
+            newState.logs.push(`Enemy's effect of ${enemyCard.name} failed!`);
+          }
+        }
+      }
       
       // Calculate damage
       if (!updatedPlayer.shield) {
@@ -226,12 +302,38 @@ export const useCardGame = create<GameStore>((set, get) => ({
         newState.logs.push(`You took ${damageToPlayer} damage (reduced by ${updatedPlayer.defense} defense)`);
       } else {
         newState.logs.push(`You were shielded and took no damage`);
+        
+        // Count towards shield master achievement if player used shield
+        if (shieldUsed) {
+          // We'll track this in game state to count the 3 needed for achievement
+          state.shieldCounter = (state.shieldCounter || 0) + 1;
+          
+          // If we've blocked 3 times, unlock the achievement
+          if (state.shieldCounter >= 3) {
+            get().unlockAchievement('shield_master');
+          }
+        }
       }
       
       if (!updatedEnemy.shield) {
         const damageToEnemy = Math.max(0, playerCard.power - updatedEnemy.defense);
         updatedEnemy.hp -= damageToEnemy;
         newState.logs.push(`Enemy took ${damageToEnemy} damage (reduced by ${updatedEnemy.defense} defense)`);
+        
+        // Track fire wizard and ice mage achievements
+        if (burnUsed) {
+          state.burnCounter = (state.burnCounter || 0) + 1;
+          if (state.burnCounter >= 5) {
+            get().unlockAchievement('fire_wizard');
+          }
+        }
+        
+        if (freezeUsed) {
+          state.freezeCounter = (state.freezeCounter || 0) + 1;
+          if (state.freezeCounter >= 5) {
+            get().unlockAchievement('ice_mage');
+          }
+        }
       } else {
         newState.logs.push(`Enemy was shielded and took no damage`);
       }
@@ -245,7 +347,15 @@ export const useCardGame = create<GameStore>((set, get) => ({
         newState.logs.push(`Defeat! You have been defeated.`);
         setTimeout(() => {
           alert("Defeat! The enemy has prevailed.");
-          set({ gameState: "title", player: null, enemy: null, logs: [] });
+          set({ 
+            gameState: "title", 
+            player: null, 
+            enemy: null, 
+            logs: [],
+            shieldCounter: 0,
+            burnCounter: 0,
+            freezeCounter: 0
+          });
         }, 500);
       } else if (updatedEnemy.hp <= 0) {
         newState.logs.push(`Victory! You have defeated your opponent.`);
@@ -258,9 +368,22 @@ export const useCardGame = create<GameStore>((set, get) => ({
           get().unlockAchievement('rare_collector');
         }
         
+        // Check for lucky draw achievement in character selection
+        if (player.rarity === 'Divine') {
+          get().unlockAchievement('lucky_draw');
+        }
+        
         setTimeout(() => {
           alert("Victory! You have vanquished your foe!");
-          set({ gameState: "title", player: null, enemy: null, logs: [] });
+          set({ 
+            gameState: "title", 
+            player: null, 
+            enemy: null, 
+            logs: [],
+            shieldCounter: 0,
+            burnCounter: 0,
+            freezeCounter: 0
+          });
         }, 500);
       }
       
@@ -375,14 +498,19 @@ function weightedRandomSelect(items: any[], weights: number[], k: number): any[]
   return selected;
 }
 
+// This function has been replaced with a more robust implementation directly in playCard
+// Keeping this as a reference but it's no longer used
 function applyEffect(playerCard: Card, enemyCard: Card, self: Character, opponent: Character, state: any): void {
-  if (playerCard.effect && cardEffects[playerCard.effect]) {
-    try {
-      cardEffects[playerCard.effect](playerCard, enemyCard, self, opponent, () => {
-        state.logs.push("Enemy hand revealed!");
-      });
-    } catch (error) {
-      console.error(`Error applying effect of ${playerCard.name}:`, error);
+  if (playerCard.effect && typeof playerCard.effect === 'string') {
+    const effectKey = playerCard.effect as keyof typeof cardEffects;
+    if (cardEffects[effectKey]) {
+      try {
+        cardEffects[effectKey](playerCard, enemyCard, self, opponent, () => {
+          state.logs.push("Enemy hand revealed!");
+        });
+      } catch (error) {
+        console.error(`Error applying effect of ${playerCard.name}:`, error);
+      }
     }
   }
 }
