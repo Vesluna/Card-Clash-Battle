@@ -50,6 +50,17 @@ const TitleScreen = () => {
     // Set up title screen background music info
     document.title = "Card Clash: Battle";
     
+    // Initialize audio system and prepare background music
+    const { initializeSounds, playMusic } = useAudio.getState();
+    
+    // Initialize sounds
+    initializeSounds();
+    
+    // Try to play the music (this may be blocked by browsers until user interaction)
+    setTimeout(() => {
+      playMusic();
+    }, 1000);
+    
     // Music info for the developer to add
     console.log("Title Music Info: Ancient Legends - Medieval fantasy orchestral with lutes, harps, drums and fantasy choir elements");
   }, []);

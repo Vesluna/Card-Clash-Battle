@@ -157,7 +157,12 @@ export const useCardGame = create<GameStore>((set, get) => ({
     const player = createCharacter(char);
     
     // Select random enemy
-    const characterWeights = characters.map(c => rarityWeights[c.rarity]);
+    const characterWeights = characters.map(c => {
+      // Make TypeScript happy with this type assertion
+      const rarity = c.rarity as keyof typeof rarityWeights;
+      return rarityWeights[rarity] || 1; // Fallback to 1 if rarity not found
+    });
+    
     const enemyChar = weightedRandomSelect(characters, characterWeights, 1)[0];
     const enemy = createCharacter(enemyChar);
     

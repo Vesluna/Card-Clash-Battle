@@ -91,6 +91,33 @@ const GameBoard = () => {
       
       // After enemy card animation, complete the play
       setTimeout(() => {
+        // Play appropriate sound based on card effect
+        if (player && player.hand[index]) {
+          const cardEffect = player.hand[index].effect;
+          
+          if (cardEffect) {
+            // Play special sound for shield-related abilities
+            if (cardEffect === 'Shield' || cardEffect === 'Protect' || 
+                cardEffect === 'Ethereal' || cardEffect === 'Crystallize') {
+              useAudio.getState().playShield();
+            }
+            // Play special sound for reveal/foresight abilities
+            else if (cardEffect === 'RevealHand' || cardEffect === 'Foresight') {
+              useAudio.getState().playSpecial();
+              // Ensure we trigger the reveal
+              revealEnemyHand();
+            }
+            // Play special sounds for other abilities
+            else {
+              useAudio.getState().playSpecial();
+            }
+          } else {
+            // Play regular card sound for normal cards
+            useAudio.getState().playCard();
+          }
+        }
+        
+        // Execute the card play in game state
         playCard(index);
         setGameAction('round-complete');
         

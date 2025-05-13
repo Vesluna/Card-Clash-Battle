@@ -1,7 +1,7 @@
 // Card effect definitions and rarity data
 
 // Rarity weights for character selection
-export const rarityWeights = {
+export const rarityWeights: Record<string, number> = {
   Common: 1000,
   Uncommon: 500,
   Rare: 250,
