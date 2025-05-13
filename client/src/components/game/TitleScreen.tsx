@@ -36,6 +36,24 @@ const gameModes: GameMode[] = [
     name: 'Survival Mode',
     description: 'How long can you last? Face increasingly powerful enemies with each victory.',
     icon: '🛡️'
+  },
+  {
+    id: 'rounds',
+    name: 'Zombie Rounds',
+    description: 'Survive a zombie outbreak! Battle waves of zombies and powerful zombie bosses with your 100-card deck.',
+    icon: '🧟'
+  },
+  {
+    id: 'endless',
+    name: 'Endless Duel',
+    description: 'Fight with a 100-card deck! When your deck is empty, redraw a fresh batch of cards.',
+    icon: '♾️'
+  },
+  {
+    id: 'draft',
+    name: 'Card Draft',
+    description: 'Build your deck as you play! Choose one of three cards after each round.',
+    icon: '📝'
   }
 ];
 

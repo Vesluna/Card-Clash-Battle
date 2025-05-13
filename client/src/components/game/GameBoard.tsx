@@ -305,7 +305,7 @@ const GameBoard = () => {
           onClick={() => toggleMute()}
           className="text-amber-300 hover:text-amber-100 transition-colors text-sm md:text-base px-3 py-1 border border-amber-800 rounded-lg hover:bg-amber-900/30"
         >
-          {isMuted ? "🔇 Unmute" : "🔊 Mute"}
+          {useAudio.getState().isMuted ? "🔇 Unmute" : "🔊 Mute"}
         </button>
       </motion.div>
     </motion.div>

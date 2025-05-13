@@ -11,8 +11,12 @@ interface Character {
   hp: number;
   defense: number;
   rarity: string;
-  hand: Card[];
+  hand: Card[];       // Current cards in hand
+  deck: Card[];       // Full deck of cards (up to 100)
+  discardPile: Card[]; // Discarded cards
   shield: boolean;
+  round?: number;     // For "Rounds" game mode
+  zombiesDefeated?: number; // For "Rounds" game mode
 }
 
 interface Card {
@@ -240,25 +244,88 @@ export const useCardGame = create<GameStore>((set, get) => ({
     set(state => {
       if (!state.player || !state.enemy) return state;
       
-      // Create new hands
+      // Create deep copies of player and enemy to modify
+      const updatedPlayer = structuredClone(state.player);
+      const updatedEnemy = structuredClone(state.enemy);
+      
+      const drawCardFromDeck = (character: Character): Card => {
+        // If deck is empty, shuffle discard pile back into deck
+        if (character.deck.length === 0) {
+          if (character.discardPile.length === 0) {
+            // Both deck and discard pile are empty, generate new random cards
+            return structuredClone(cards[Math.floor(Math.random() * cards.length)]);
+          }
+          
+          // Shuffle discard pile and make it the new deck
+          character.deck = [...character.discardPile];
+          character.discardPile = [];
+          
+          // Shuffle the deck
+          for (let i = character.deck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [character.deck[i], character.deck[j]] = [character.deck[j], character.deck[i]];
+          }
+          
+          // Add a log about reshuffling
+          state.logs.push(`${character.name}'s deck has been reshuffled.`);
+        }
+        
+        // Draw from the top of the deck
+        return character.deck.pop() || structuredClone(cards[Math.floor(Math.random() * cards.length)]);
+      };
+      
+      // Draw new hands for each player
       const playerHand = [];
       const enemyHand = [];
       
-      for (let i = 0; i < 4; i++) {
-        playerHand.push(structuredClone(cards[Math.floor(Math.random() * cards.length)]));
-        enemyHand.push(structuredClone(cards[Math.floor(Math.random() * cards.length)]));
+      // Draw 5 cards for each player (or fewer if in certain game modes)
+      const handSize = state.gameMode === 'blitz' ? 3 : (state.gameMode === 'tactical' ? 4 : 5);
+      
+      for (let i = 0; i < handSize; i++) {
+        playerHand.push(drawCardFromDeck(updatedPlayer));
+        enemyHand.push(drawCardFromDeck(updatedEnemy));
+      }
+      
+      // Set the hands
+      updatedPlayer.hand = playerHand;
+      updatedEnemy.hand = enemyHand;
+      
+      // Special handling for Rounds mode - zombie outbreak
+      if (state.gameMode === 'rounds' && updatedPlayer.round) {
+        // Increment round counter in Rounds mode
+        updatedPlayer.round += 1;
+        
+        // Every 5 rounds is a boss round
+        if (updatedPlayer.round % 5 === 0) {
+          // Create a zombie boss for round multiples of 5
+          const bossLevel = Math.floor(updatedPlayer.round / 5);
+          
+          // Boss gets stronger with each level
+          updatedEnemy.hp += 10 * bossLevel;
+          updatedEnemy.defense += bossLevel;
+          
+          // Give boss special cards
+          updatedEnemy.hand = updatedEnemy.hand.map(card => {
+            const bossCard = { ...card };
+            bossCard.power += bossLevel;
+            bossCard.ability = `Zombie Boss Lv.${bossLevel}: ${bossCard.ability}`;
+            bossCard.emoji = '☠️';
+            return bossCard;
+          });
+          
+          state.logs.push(`Round ${updatedPlayer.round}: A Level ${bossLevel} Zombie Boss appears!`);
+        } else {
+          // Regular zombie round
+          updatedEnemy.hp = 20 + (updatedPlayer.round * 2); // Zombies get stronger each round
+          state.logs.push(`Round ${updatedPlayer.round}: Zombies approach!`);
+        }
       }
       
       return {
-        player: {
-          ...state.player,
-          hand: playerHand
-        },
-        enemy: {
-          ...state.enemy,
-          hand: enemyHand
-        },
-        logs: [...state.logs, "New cards drawn"]
+        ...state,
+        player: updatedPlayer,
+        enemy: updatedEnemy,
+        logs: [...state.logs, "New cards drawn for battle!"]
       };
     });
   },
@@ -271,8 +338,8 @@ export const useCardGame = create<GameStore>((set, get) => ({
       const newState = { ...state };
       
       // Clone current state for modifications
-      const updatedPlayer = { ...player };
-      const updatedEnemy = { ...enemy };
+      const updatedPlayer = structuredClone(player);
+      const updatedEnemy = structuredClone(enemy);
       
       // Get cards to play
       const playerCard = updatedPlayer.hand[index];
@@ -561,13 +628,59 @@ export const useCardGame = create<GameStore>((set, get) => ({
 
 // Helper functions
 function createCharacter(char: any): Character {
+  // Generate a full 100-card deck for the character
+  // Each character has specific cards that appear more frequently in their deck
+  const fullDeck: Card[] = [];
+  
+  // Get 100 cards based on character's rarity and abilities
+  for (let i = 0; i < 100; i++) {
+    // Select a random card from the cards array
+    const randomCard = structuredClone(cards[Math.floor(Math.random() * cards.length)]);
+    
+    // Customize the card based on character's rarity
+    // Higher rarity characters get more powerful cards
+    if (char.rarity === 'Legendary' || char.rarity === 'Mythic' || char.rarity === 'Divine') {
+      randomCard.power += 1; // Boost power for rare characters
+    }
+    
+    // Add character-specific cards (every character has their specialty)
+    if (i % 10 === 0) { // Every 10th card is character-specific
+      // Customize card based on character name
+      if (char.name === 'Mage') {
+        randomCard.effect = 'Burn'; // Mage specializes in fire
+      } else if (char.name === 'Knight') {
+        randomCard.effect = 'Shield'; // Knight specializes in protection
+      } else if (char.name === 'Rogue') {
+        randomCard.effect = 'Steal'; // Rogue steals things
+      } else if (char.name === 'Berserker') {
+        randomCard.effect = 'Enrage'; // Berserker gets angry
+      } else if (char.name === 'Druid') {
+        randomCard.effect = 'Heal'; // Druid heals
+      }
+      // Add more character-specific cards as needed
+    }
+    
+    fullDeck.push(randomCard);
+  }
+  
+  // Shuffle the deck
+  const shuffledDeck = [...fullDeck];
+  for (let i = shuffledDeck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledDeck[i], shuffledDeck[j]] = [shuffledDeck[j], shuffledDeck[i]];
+  }
+  
   return {
     name: char.name,
     hp: char.baseHP,
     defense: getRarityDefense(char.rarity),
     rarity: char.rarity,
     hand: [],
-    shield: false
+    deck: shuffledDeck,
+    discardPile: [],
+    shield: false,
+    round: 1,
+    zombiesDefeated: 0
   };
 }
 
