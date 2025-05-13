@@ -1,5 +1,6 @@
 // Card data with effects and visuals
 export const cards = [
+  // Original cards
   { name: "Flame Warrior", emoji: "🔥", power: 5, ability: "Burn", effect: "Burn" },
   { name: "Ice Mage", emoji: "❄️", power: 4, ability: "Freeze", effect: "Freeze" },
   { name: "Shadow Thief", emoji: "🕵️", power: 3, ability: "Steal", effect: "Steal" },
@@ -20,4 +21,16 @@ export const cards = [
   { name: "Demonic Knight", emoji: "😈", power: 6, ability: "Burn", effect: "Burn" },
   { name: "Forest Ranger", emoji: "🏹", power: 4, ability: "Summon", effect: "Summon" },
   { name: "Mountain Giant", emoji: "🏔️", power: 8, ability: "Sturdy", effect: "Sturdy" },
+  
+  // New cards with unique effects
+  { name: "Vampire Lord", emoji: "🧛", power: 4, ability: "Lifesteal", effect: "Lifesteal" },
+  { name: "Time Mage", emoji: "⏳", power: 3, ability: "Rewind", effect: "Rewind" },
+  { name: "Plaguebearer", emoji: "🦠", power: 3, ability: "Infect", effect: "Infect" },
+  { name: "Treasure Hunter", emoji: "💰", power: 2, ability: "Fortune", effect: "Fortune" },
+  { name: "Mirror Entity", emoji: "🪞", power: 0, ability: "Reflect", effect: "Reflect" },
+  { name: "Spirit Guardian", emoji: "👻", power: 4, ability: "Ethereal", effect: "Ethereal" },
+  { name: "Meteor Mage", emoji: "☄️", power: 5, ability: "Bombardment", effect: "Bombardment" },
+  { name: "Thunder God", emoji: "⚡", power: 7, ability: "Chain Lightning", effect: "ChainLightning" },
+  { name: "Crystal Weaver", emoji: "💎", power: 3, ability: "Crystallize", effect: "Crystallize" },
+  { name: "Soul Reaper", emoji: "💀", power: 6, ability: "Soul Harvest", effect: "SoulHarvest" },
 ];
