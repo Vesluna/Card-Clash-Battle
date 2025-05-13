@@ -480,6 +480,21 @@ export const useCardGame = create<GameStore>((set, get) => ({
       updatedPlayer.shield = false;
       updatedEnemy.shield = false;
       
+      // Add played cards to discard pile before checking game end
+      // Remove the played card from player's hand and add to discard pile
+      const playerCardIndex = updatedPlayer.hand.findIndex(card => card === playerCard);
+      if (playerCardIndex !== -1) {
+        const [discardedCard] = updatedPlayer.hand.splice(playerCardIndex, 1);
+        updatedPlayer.discardPile.push(discardedCard);
+      }
+      
+      // Remove the played card from enemy's hand and add to discard pile
+      const enemyCardIdx = updatedEnemy.hand.findIndex(card => card === enemyCard);
+      if (enemyCardIdx !== -1) {
+        const [discardedCard] = updatedEnemy.hand.splice(enemyCardIdx, 1);
+        updatedEnemy.discardPile.push(discardedCard);
+      }
+      
       // Check for game over
       if (updatedPlayer.hp <= 0) {
         newState.logs.push(`Defeat! You have been defeated.`);
@@ -523,6 +538,21 @@ export const useCardGame = create<GameStore>((set, get) => ({
           get().unlockAchievement('tactical_genius');
         } else if (currentGameMode === 'survival') {
           get().unlockAchievement('survivalist');
+        } else if (currentGameMode === 'rounds') {
+          // Increment zombies defeated counter
+          if (updatedPlayer.zombiesDefeated !== undefined) {
+            updatedPlayer.zombiesDefeated += 1;
+            
+            // Zombie slayer achievement - defeat 10 zombies
+            if (updatedPlayer.zombiesDefeated >= 10) {
+              get().unlockAchievement('zombie_slayer');
+            }
+            
+            // Zombie boss slayer achievement - defeat a boss (every 5th round)
+            if (updatedPlayer.round && updatedPlayer.round % 5 === 0) {
+              get().unlockAchievement('boss_slayer');
+            }
+          }
         }
         
         // Perfect victory achievement - check if player has full HP
@@ -537,16 +567,70 @@ export const useCardGame = create<GameStore>((set, get) => ({
         }
         
         setTimeout(() => {
-          alert("Victory! You have vanquished your foe!");
-          set({ 
-            gameState: "title", 
-            player: null, 
-            enemy: null, 
-            logs: [],
-            shieldCounter: 0,
-            burnCounter: 0,
-            freezeCounter: 0
-          });
+          // Different victory messages based on game mode
+          if (get().gameMode === 'rounds') {
+            alert(`Zombie defeated! Prepare for the next round!`);
+          } else {
+            alert("Victory! You have vanquished your foe!");
+          }
+          
+          // In survival mode, face a stronger opponent
+          if (get().gameMode === 'survival') {
+            // Create a stronger enemy for the next battle
+            const newEnemy = createCharacter(
+              characters[Math.floor(Math.random() * characters.length)]
+            );
+            
+            // Make the enemy stronger
+            newEnemy.hp += 10; // More health
+            newEnemy.defense += 1; // More defense
+            
+            set({
+              enemy: newEnemy,
+              logs: ["A stronger opponent approaches!"]
+            });
+            
+            // Draw new hands
+            get().drawHands();
+          } 
+          // In rounds mode, prepare for the next round of zombies
+          else if (get().gameMode === 'rounds') {
+            // Continue with the same player but create a new zombie enemy
+            const newEnemy = createCharacter({
+              name: "Zombie",
+              baseHP: 20 + (updatedPlayer.round || 0) * 2,
+              rarity: "Common"
+            });
+            
+            set({
+              player: updatedPlayer, // Keep the updated player with incremented counters
+              enemy: newEnemy,
+              logs: [`Preparing for Round ${updatedPlayer.round || 1}...`]
+            });
+            
+            // Draw new hands for the next round
+            get().drawHands();
+          }
+          // In endless duel mode, just redraw hands if needed
+          else if (get().gameMode === 'endless') {
+            // Check if hands need to be refreshed
+            set({
+              logs: ["Drawing a fresh batch of cards..."]
+            });
+            get().drawHands();
+          } 
+          // All other modes return to title
+          else {
+            set({ 
+              gameState: "title", 
+              player: null, 
+              enemy: null, 
+              logs: [],
+              shieldCounter: 0,
+              burnCounter: 0,
+              freezeCounter: 0
+            });
+          }
         }, 500);
       }
       
