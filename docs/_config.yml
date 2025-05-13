@@ -1,4 +1,6 @@
 
-theme: jekyll-theme-minimal
-title: Card Clash Documentation
-description: Documentation for Card Clash battle game
+title: Card Clash Battle
+description: A strategic card battle game
+baseurl: "/Card-Clash-Battle"
+url: ""
+theme: jekyll-theme-primer
