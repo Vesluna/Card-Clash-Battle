@@ -1,0 +1,138 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: radial-gradient(circle, #1a1a2e, #16213e);
+  color: #333;
+  overflow-x: hidden;
+}
+
+h1 {
+  font-size: 3.5rem;
+  margin: 20px;
+  color: #ffd369;
+  text-shadow: 0 0 10px rgba(255, 211, 105, 0.8);
+}
+
+h2 {
+  font-size: 1.8rem;
+  margin: 10px 0;
+}
+
+h3 {
+  margin: 5px 0;
+  font-size: 1.2rem;
+}
+
+.subtitle {
+  color: #e0e0e0;
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+}
+
+button {
+  padding: 12px 24px;
+  font-size: 1.2rem;
+  background: #ff5722;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+button:hover {
+  background: #e64a19;
+  transform: scale(1.05);
+}
+
+.hidden {
+  display: none;
+}
+
+#title-screen {
+  text-align: center;
+  padding-top: 100px;
+  min-height: 100vh;
+}
+
+#character-selection {
+  text-align: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  min-height: 100vh;
+}
+
+#game-screen {
+  padding: 20px;
+}
+
+.hp-panel {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 20px;
+  background: #f4e8d7;
+  padding: 15px;
+  border-radius: 12px;
+  border: 3px solid #d4a373;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.card-area {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: #f4e8d7;
+  border: 2px solid #d4a373;
+  color: #333;
+  border-radius: 10px;
+  margin: 10px;
+  padding: 15px;
+  width: 130px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.card:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+.card span.emoji {
+  font-size: 2rem;
+  display: block;
+}
+
+#log {
+  background: #f4e8d7;
+  padding: 15px;
+  margin: 0 auto;
+  width: 90%;
+  max-height: 200px;
+  overflow-y: auto;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  border: 2px solid #d4a373;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.character-card {
+  display: inline-block;
+  background: #f4e8d7;
+  border: 2px solid #d4a373;
+  border-radius: 10px;
+  margin: 15px;
+  padding: 15px;
+  width: 200px;
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.character-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+.character-card p {
+  margin: 5px 0;
+}
