@@ -40,9 +40,11 @@ interface GameStore {
   logs: string[];
   achievements: Achievement[];
   tutorialStep: number;
-  shieldCounter?: number;
-  burnCounter?: number;
-  freezeCounter?: number;
+  shieldCounter: number;
+  burnCounter: number;
+  freezeCounter: number;
+  gameMode: string;
+  enemyHandRevealed: boolean;
   
   // Actions
   startCharacterSelection: () => void;
@@ -54,6 +56,9 @@ interface GameStore {
   playCard: (index: number) => void;
   addLog: (message: string) => void;
   unlockAchievement: (id: string) => void;
+  setGameMode: (mode: string) => void;
+  viewAchievements: () => void;
+  revealEnemyHand: () => void;
 }
 
 // Initial achievements
@@ -112,6 +117,8 @@ export const useCardGame = create<GameStore>((set, get) => ({
   shieldCounter: 0,
   burnCounter: 0,
   freezeCounter: 0,
+  gameMode: "standard",
+  enemyHandRevealed: false,
   
   startCharacterSelection: () => {
     set({ gameState: "selection" });
@@ -429,12 +436,37 @@ export const useCardGame = create<GameStore>((set, get) => ({
       if (achievement && !achievement.unlocked) {
         // Only notify if it wasn't already unlocked
         setTimeout(() => {
-          alert(`🏆 Achievement Unlocked: ${achievement.name}\n${achievement.description}`);
+          // Use toast instead of alert for a nicer user experience
+          import('sonner').then(({ toast }) => {
+            toast.success(`🏆 Achievement Unlocked: ${achievement.name}`, {
+              description: achievement.description,
+              duration: 5000,
+              position: 'bottom-right',
+              icon: achievement.icon
+            });
+          });
         }, 1000);
       }
       
       return { achievements: updatedAchievements };
     });
+  },
+  
+  setGameMode: (mode) => {
+    set({ gameMode: mode });
+  },
+  
+  viewAchievements: () => {
+    // This is a placeholder function that will be used by the TitleScreen component
+    // The actual implementation happens in the TitleScreen component with useState
+  },
+  
+  revealEnemyHand: () => {
+    set({ enemyHandRevealed: true });
+    
+    setTimeout(() => {
+      set({ enemyHandRevealed: false });
+    }, 5000); // Hide enemy hand after 5 seconds
   }
 }));
 

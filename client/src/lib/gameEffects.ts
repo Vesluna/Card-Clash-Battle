@@ -35,8 +35,10 @@ export const cardEffects = {
   },
   
   RevealHand: (playerCard: any, enemyCard: any, player: any, enemy: any, revealEnemyHand: any) => {
-    if (revealEnemyHand) revealEnemyHand();
-    return "👁️ Reveal Hand exposes enemy cards!";
+    if (revealEnemyHand && typeof revealEnemyHand === 'function') {
+      revealEnemyHand();
+    }
+    return "👁️ Reveal Hand exposes enemy cards for 5 seconds!";
   },
   
   DiceRoll: (playerCard: any, enemyCard: any, player: any, enemy: any) => {
@@ -104,8 +106,10 @@ export const cardEffects = {
   },
   
   Foresight: (playerCard: any, enemyCard: any, player: any, enemy: any, revealEnemyHand: any) => {
-    if (revealEnemyHand) revealEnemyHand();
-    return "🔮 Foresight reveals the enemy's hand!";
+    if (revealEnemyHand && typeof revealEnemyHand === 'function') {
+      revealEnemyHand();
+    }
+    return "🔮 Foresight reveals the enemy's hand for 5 seconds!";
   },
   
   Chaos: (playerCard: any, enemyCard: any, player: any, enemy: any) => {
