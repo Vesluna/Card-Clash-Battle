@@ -24,7 +24,7 @@ const GameBoard = () => {
   const [enemyCardPlaying, setEnemyCardPlaying] = useState<number | null>(null);
   const [playerCardPlaying, setPlayerCardPlaying] = useState<number | null>(null);
   const [gameAction, setGameAction] = useState<'idle' | 'player-turn' | 'enemy-turn' | 'round-complete'>('idle');
-  const { playHit, playSuccess } = useAudio();
+  const { playHit, playSuccess, toggleMute, isMuted } = useAudio();
 
   useEffect(() => {
     // Draw initial hands when component mounts
@@ -141,16 +141,24 @@ const GameBoard = () => {
 
   return (
     <motion.div 
-      className="flex flex-col h-full w-full p-4"
+      className="flex flex-col h-full w-full p-2 md:p-4 overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
+      {/* Current Round Indicator */}
+      <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-amber-800/80 px-4 py-1 rounded-full text-amber-100 text-sm font-medievalsharp shadow-lg z-10">
+        {gameMode === 'standard' ? 'Standard Battle' : 
+         gameMode === 'blitz' ? 'Blitz Mode' : 
+         gameMode === 'tactical' ? 'Tactical Mode' : 
+         'Survival Mode'}
+      </div>
+      
       {/* Battle header with health bars */}
-      <div className="bg-gradient-to-r from-gray-900/80 to-gray-800/80 rounded-lg p-4 mb-4 shadow-lg backdrop-blur-sm">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="w-full md:w-5/12 flex flex-col">
-            <div className="font-medievalsharp text-lg text-amber-300">
+      <div className="bg-gradient-to-r from-gray-900/80 to-gray-800/80 rounded-lg p-2 md:p-4 mb-2 md:mb-4 shadow-lg backdrop-blur-sm">
+        <div className="flex flex-row justify-between items-center gap-2 md:gap-4">
+          <div className="w-5/12 flex flex-col">
+            <div className="font-medievalsharp text-sm md:text-lg text-amber-300 truncate">
               {player.name} <span className="text-amber-200">{getRarityBadge(player.rarity)}</span>
             </div>
             <HealthBar 
@@ -161,10 +169,10 @@ const GameBoard = () => {
             />
           </div>
           
-          <div className="text-amber-400 font-bold text-lg">VS</div>
+          <div className="text-amber-400 font-bold text-sm md:text-lg">VS</div>
           
-          <div className="w-full md:w-5/12 flex flex-col">
-            <div className="font-medievalsharp text-lg text-red-300">
+          <div className="w-5/12 flex flex-col">
+            <div className="font-medievalsharp text-sm md:text-lg text-red-300 truncate">
               {enemy.name} <span className="text-red-200">{getRarityBadge(enemy.rarity)}</span>
             </div>
             <HealthBar 
@@ -178,16 +186,16 @@ const GameBoard = () => {
       </div>
       
       {/* Game area */}
-      <div className="flex-grow flex flex-col md:flex-row gap-4">
+      <div className="flex-grow flex flex-col md:flex-row gap-2 md:gap-4 overflow-hidden">
         {/* Enemy hand area */}
-        <div className="w-full md:w-1/4 relative">
+        <div className="w-full md:w-1/4 h-[30vh] md:h-auto">
           <motion.div 
-            className="bg-gradient-to-b from-gray-900/70 to-gray-800/70 h-full rounded-lg p-4 shadow-lg backdrop-blur-sm overflow-y-auto"
+            className="bg-gradient-to-b from-gray-900/70 to-gray-800/70 h-full rounded-lg p-2 md:p-4 shadow-lg backdrop-blur-sm overflow-y-auto"
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
-            <h3 className="text-red-300 font-medievalsharp mb-2">Enemy Cards</h3>
+            <h3 className="text-red-300 font-medievalsharp text-sm md:text-base mb-2">Enemy Cards</h3>
             
             {enemyHandVisible ? (
               <div className="space-y-2">
@@ -203,18 +211,19 @@ const GameBoard = () => {
                         "0 0 15px rgba(220, 38, 38, 0.7)" : "none"
                     }}
                     transition={{ delay: idx * 0.1 }}
+                    className="transform-gpu"
                   >
                     <Card card={card} isEnemy={true} />
                   </motion.div>
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-full">
-                <p className="text-gray-400 text-center mb-4">Enemy's hand is hidden</p>
+              <div className="flex flex-col items-center justify-center h-[calc(100%-2rem)]">
+                <p className="text-gray-400 text-center text-sm mb-2 md:mb-4">Enemy's hand is hidden</p>
                 {enemy.hand.map((_, idx) => (
                   <motion.div 
                     key={`enemy-back-${idx}`}
-                    className="w-full h-16 mb-2 bg-gradient-to-r from-red-900 to-red-800 rounded border border-red-700 flex items-center justify-center text-2xl"
+                    className="w-full h-12 md:h-16 mb-2 bg-gradient-to-r from-red-900 to-red-800 rounded border border-red-700 flex items-center justify-center text-xl md:text-2xl"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.1 }}
@@ -229,7 +238,7 @@ const GameBoard = () => {
         
         {/* Battle log area */}
         <motion.div 
-          className="flex-grow"
+          className="flex-grow h-[30vh] md:h-auto overflow-hidden"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3 }}
@@ -238,14 +247,14 @@ const GameBoard = () => {
         </motion.div>
         
         {/* Player hand area */}
-        <div className="w-full md:w-1/3">
+        <div className="w-full md:w-1/3 h-[35vh] md:h-auto">
           <motion.div 
-            className="bg-gradient-to-b from-gray-900/70 to-gray-800/70 h-full rounded-lg p-4 shadow-lg backdrop-blur-sm overflow-y-auto"
+            className="bg-gradient-to-b from-gray-900/70 to-gray-800/70 h-full rounded-lg p-2 md:p-4 shadow-lg backdrop-blur-sm overflow-y-auto"
             initial={{ x: 20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.4 }}
           >
-            <h3 className="text-amber-300 font-medievalsharp mb-2">Your Cards</h3>
+            <h3 className="text-amber-300 font-medievalsharp text-sm md:text-base mb-2">Your Cards</h3>
             
             <div className="space-y-2">
               {player.hand.map((card, idx) => (
@@ -263,6 +272,7 @@ const GameBoard = () => {
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ delay: idx * 0.1 }}
                     whileHover={{ scale: gameAction === 'idle' ? 1.02 : 1 }}
+                    className="transform-gpu"
                   >
                     <Card 
                       card={card} 
@@ -277,18 +287,25 @@ const GameBoard = () => {
         </div>
       </div>
       
-      {/* Back button */}
+      {/* Game controls */}
       <motion.div 
-        className="mt-4 text-center"
+        className="mt-2 md:mt-4 flex justify-center gap-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6 }}
       >
         <button 
           onClick={backToTitle}
-          className="text-amber-300 hover:text-amber-100 transition-colors"
+          className="text-amber-300 hover:text-amber-100 transition-colors text-sm md:text-base px-3 py-1 border border-amber-800 rounded-lg hover:bg-amber-900/30"
         >
           Abandon Battle
+        </button>
+        
+        <button 
+          onClick={() => toggleMute()}
+          className="text-amber-300 hover:text-amber-100 transition-colors text-sm md:text-base px-3 py-1 border border-amber-800 rounded-lg hover:bg-amber-900/30"
+        >
+          {isMuted ? "🔇 Unmute" : "🔊 Mute"}
         </button>
       </motion.div>
     </motion.div>

@@ -104,8 +104,57 @@ const initialAchievements: Achievement[] = [
     description: 'Get a Divine character in character selection',
     unlocked: false,
     icon: '🎰'
+  },
+  // New achievements
+  {
+    id: 'blitz_master',
+    name: 'Blitz Master',
+    description: 'Win a game in Blitz mode',
+    unlocked: false,
+    icon: '⚡'
+  },
+  {
+    id: 'tactical_genius',
+    name: 'Tactical Genius',
+    description: 'Win a game in Tactical mode',
+    unlocked: false,
+    icon: '🧠'
+  },
+  {
+    id: 'survivalist',
+    name: 'Survivalist',
+    description: 'Win a game in Survival mode',
+    unlocked: false,
+    icon: '🛡️'
+  },
+  {
+    id: 'card_collector',
+    name: 'Card Collector',
+    description: 'Play at least 20 different cards',
+    unlocked: false,
+    icon: '🃏'
+  },
+  {
+    id: 'perfect_victory',
+    name: 'Perfect Victory',
+    description: 'Win without taking any damage',
+    unlocked: false,
+    icon: '⭐'
+  },
+  {
+    id: 'unstoppable',
+    name: 'Unstoppable',
+    description: 'Win 3 games in a row',
+    unlocked: false,
+    icon: '🔄'
   }
 ];
+
+// Track played cards for card collector achievement
+let playedCardNames = new Set<string>();
+
+// Track consecutive wins for unstoppable achievement
+let consecutiveWins = 0;
 
 export const useCardGame = create<GameStore>((set, get) => ({
   gameState: "title",
@@ -229,6 +278,16 @@ export const useCardGame = create<GameStore>((set, get) => ({
       const playerCard = updatedPlayer.hand[index];
       const enemyCardIndex = Math.floor(Math.random() * updatedEnemy.hand.length);
       const enemyCard = updatedEnemy.hand[enemyCardIndex];
+      
+      // Track cards played for card collector achievement
+      if (playerCard && playerCard.name) {
+        playedCardNames.add(playerCard.name);
+        
+        // Check if player has used 20 different cards
+        if (playedCardNames.size >= 20) {
+          get().unlockAchievement('card_collector');
+        }
+      }
       
       // Track effect counters for achievements
       let shieldUsed = false;
@@ -357,6 +416,10 @@ export const useCardGame = create<GameStore>((set, get) => ({
       // Check for game over
       if (updatedPlayer.hp <= 0) {
         newState.logs.push(`Defeat! You have been defeated.`);
+        
+        // Reset consecutive wins on defeat
+        consecutiveWins = 0;
+        
         setTimeout(() => {
           alert("Defeat! The enemy has prevailed.");
           set({ 
@@ -383,6 +446,27 @@ export const useCardGame = create<GameStore>((set, get) => ({
         // Check for lucky draw achievement in character selection
         if (player.rarity === 'Divine') {
           get().unlockAchievement('lucky_draw');
+        }
+        
+        // Game mode specific achievements
+        const currentGameMode = get().gameMode;
+        if (currentGameMode === 'blitz') {
+          get().unlockAchievement('blitz_master');
+        } else if (currentGameMode === 'tactical') {
+          get().unlockAchievement('tactical_genius');
+        } else if (currentGameMode === 'survival') {
+          get().unlockAchievement('survivalist');
+        }
+        
+        // Perfect victory achievement - check if player has full HP
+        if (player.hp >= 30) { // Using a general value as most characters start with 30
+          get().unlockAchievement('perfect_victory');
+        }
+        
+        // Increment consecutive wins and check for unstoppable achievement
+        consecutiveWins++;
+        if (consecutiveWins >= 3) {
+          get().unlockAchievement('unstoppable');
         }
         
         setTimeout(() => {
