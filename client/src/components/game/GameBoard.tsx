@@ -5,19 +5,50 @@ import Card from "./Card";
 import HealthBar from "./HealthBar";
 import GameLog from "./GameLog";
 import { useAudio } from "@/lib/stores/useAudio";
+import { toast } from "sonner";
 
 const GameBoard = () => {
-  const { player, enemy, drawHands, playCard, backToTitle, logs } = useCardGame();
+  const { 
+    player, 
+    enemy, 
+    drawHands, 
+    playCard, 
+    backToTitle, 
+    logs, 
+    gameMode,
+    enemyHandRevealed,
+    revealEnemyHand
+  } = useCardGame();
+  
   const [enemyHandVisible, setEnemyHandVisible] = useState(false);
   const [enemyCardPlaying, setEnemyCardPlaying] = useState<number | null>(null);
   const [playerCardPlaying, setPlayerCardPlaying] = useState<number | null>(null);
   const [gameAction, setGameAction] = useState<'idle' | 'player-turn' | 'enemy-turn' | 'round-complete'>('idle');
-  const { playHit } = useAudio();
+  const { playHit, playSuccess } = useAudio();
 
   useEffect(() => {
     // Draw initial hands when component mounts
     drawHands();
   }, [drawHands]);
+  
+  // Listen for enemy hand reveal state changes
+  useEffect(() => {
+    if (enemyHandRevealed) {
+      setEnemyHandVisible(true);
+      playSuccess();
+      toast.info("👁️ Enemy hand revealed!", {
+        description: "You can see the enemy's cards for 5 seconds.",
+        duration: 3000
+      });
+      
+      // Hide again after timeout
+      const hideTimer = setTimeout(() => {
+        setEnemyHandVisible(false);
+      }, 5000);
+      
+      return () => clearTimeout(hideTimer);
+    }
+  }, [enemyHandRevealed, playSuccess]);
 
   // Function to handle playing a card
   const handlePlayCard = (index: number) => {
@@ -29,6 +60,27 @@ const GameBoard = () => {
     
     // Play sound effect
     playHit();
+    
+    // Apply game mode effects to the card if needed before playing
+    if (player && player.hand[index]) {
+      // Make a temporary copy of the card to show game mode changes
+      const modifiedCard = { ...player.hand[index] };
+      
+      // Apply game mode effects
+      if (gameMode === 'blitz') {
+        // In Blitz mode, cards deal double damage
+        modifiedCard.power *= 2;
+        toast.info(`🔥 Blitz Mode: Card power doubled to ${modifiedCard.power}!`, {
+          duration: 2000
+        });
+      } else if (gameMode === 'tactical') {
+        // In Tactical mode, abilities are stronger but base damage is reduced
+        modifiedCard.power = Math.max(1, Math.floor(modifiedCard.power * 0.7));
+        toast.info(`🧠 Tactical Mode: Abilities enhanced, base damage reduced to ${modifiedCard.power}`, {
+          duration: 2000
+        });
+      }
+    }
     
     // After a short delay for animation, execute the card action
     setTimeout(() => {
@@ -46,7 +98,10 @@ const GameBoard = () => {
         setTimeout(() => {
           setPlayerCardPlaying(null);
           setEnemyCardPlaying(null);
-          setEnemyHandVisible(false);
+          // Only reset enemy hand visibility if it's not revealed by a card effect
+          if (!enemyHandRevealed) {
+            setEnemyHandVisible(false);
+          }
           setGameAction('idle');
         }, 1000);
       }, 1000);

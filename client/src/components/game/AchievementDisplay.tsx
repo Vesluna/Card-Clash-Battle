@@ -10,7 +10,11 @@ interface Achievement {
   icon: string;
 }
 
-const AchievementDisplay = () => {
+interface AchievementDisplayProps {
+  inTitleScreen?: boolean;
+}
+
+const AchievementDisplay = ({ inTitleScreen = false }: AchievementDisplayProps) => {
   const achievements = useCardGame(state => state.achievements);
   const [isOpen, setIsOpen] = useState(false);
   
@@ -18,6 +22,18 @@ const AchievementDisplay = () => {
   
   const unlockedCount = achievements.filter(ach => ach.unlocked).length;
   
+  // When displayed in the title screen, we don't need the toggle button and popup
+  if (inTitleScreen) {
+    return (
+      <div className="space-y-3 w-full">
+        {achievements.map((achievement) => (
+          <AchievementItem key={achievement.id} achievement={achievement} />
+        ))}
+      </div>
+    );
+  }
+  
+  // Regular in-game achievement display with button and popup
   return (
     <div className="fixed top-4 right-4 z-50">
       <button

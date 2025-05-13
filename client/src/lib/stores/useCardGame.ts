@@ -493,7 +493,8 @@ function getRarityDefense(rarity: string): number {
     Divine: 10
   };
   
-  return defenseValues[rarity] || 0;
+  // TypeScript safety check
+  return (defenseValues as Record<string, number>)[rarity] || 0;
 }
 
 function weightedRandomSelect(items: any[], weights: number[], k: number): any[] {
