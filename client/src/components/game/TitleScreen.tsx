@@ -3,13 +3,20 @@ import { useCardGame } from "@/lib/stores/useCardGame";
 import { useAudio } from "@/lib/stores/useAudio";
 
 const TitleScreen = () => {
-  const startGame = useCardGame(state => state.startCharacterSelection);
+  const { startCharacterSelection, startTutorial } = useCardGame();
   const { toggleMute, isMuted } = useAudio();
 
   const handleStart = () => {
-    startGame();
+    startCharacterSelection();
     if (isMuted) {
       toggleMute(); // Unmute sounds when starting the game
+    }
+  };
+
+  const handleTutorial = () => {
+    startTutorial();
+    if (isMuted) {
+      toggleMute(); // Unmute sounds when starting tutorial
     }
   };
 
@@ -44,6 +51,13 @@ const TitleScreen = () => {
           className="bg-gradient-to-r from-amber-600 to-amber-500 text-white font-bold py-3 px-8 text-xl rounded-lg shadow-lg hover:from-amber-500 hover:to-amber-400 transform hover:scale-105 transition duration-200"
         >
           Begin Your Quest
+        </button>
+        
+        <button 
+          onClick={handleTutorial}
+          className="bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold py-3 px-8 text-xl rounded-lg shadow-lg hover:from-blue-500 hover:to-blue-400 transform hover:scale-105 transition duration-200"
+        >
+          Tutorial
         </button>
         
         <button

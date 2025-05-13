@@ -4,7 +4,7 @@ import { cards } from "../cardData";
 import { cardEffects, rarityWeights } from "../gameEffects";
 
 // Game state types
-type GameState = "title" | "selection" | "battle" | "result";
+type GameState = "title" | "selection" | "battle" | "result" | "tutorial";
 
 interface Character {
   name: string;
@@ -23,30 +23,120 @@ interface Card {
   effect?: string;
 }
 
+// Achievement system
+interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  unlocked: boolean;
+  icon: string;
+}
+
 interface GameStore {
   // State
   gameState: GameState;
   player: Character | null;
   enemy: Character | null;
   logs: string[];
+  achievements: Achievement[];
+  tutorialStep: number;
   
   // Actions
   startCharacterSelection: () => void;
+  startTutorial: () => void;
+  nextTutorialStep: () => void;
   selectCharacter: (char: any) => void;
   backToTitle: () => void;
   drawHands: () => void;
   playCard: (index: number) => void;
   addLog: (message: string) => void;
+  unlockAchievement: (id: string) => void;
 }
+
+// Initial achievements
+const initialAchievements: Achievement[] = [
+  {
+    id: 'first_win',
+    name: 'First Victory',
+    description: 'Win your first battle',
+    unlocked: false,
+    icon: '🏆'
+  },
+  {
+    id: 'shield_master',
+    name: 'Shield Master',
+    description: 'Block damage 3 times in a single game',
+    unlocked: false,
+    icon: '🛡️'
+  },
+  {
+    id: 'fire_wizard',
+    name: 'Fire Wizard',
+    description: 'Deal burn damage 5 times',
+    unlocked: false,
+    icon: '🔥'
+  },
+  {
+    id: 'ice_mage',
+    name: 'Ice Mage',
+    description: 'Freeze enemies 5 times',
+    unlocked: false,
+    icon: '❄️'
+  },
+  {
+    id: 'rare_collector',
+    name: 'Rare Collector',
+    description: 'Select a Legendary or higher character',
+    unlocked: false,
+    icon: '✨'
+  },
+  {
+    id: 'lucky_draw',
+    name: 'Lucky Draw',
+    description: 'Get a Divine character in character selection',
+    unlocked: false,
+    icon: '🎰'
+  }
+];
 
 export const useCardGame = create<GameStore>((set, get) => ({
   gameState: "title",
   player: null,
   enemy: null,
   logs: [],
+  achievements: initialAchievements,
+  tutorialStep: 0,
   
   startCharacterSelection: () => {
     set({ gameState: "selection" });
+  },
+
+  startTutorial: () => {
+    // Create preset characters for tutorial
+    const tutorialPlayer = createCharacter({
+      name: "Apprentice",
+      baseHP: 30,
+      rarity: "Common"
+    });
+    
+    const tutorialEnemy = createCharacter({
+      name: "Training Dummy",
+      baseHP: 20,
+      rarity: "Common"
+    });
+    
+    set({ 
+      gameState: "tutorial", 
+      player: tutorialPlayer,
+      enemy: tutorialEnemy,
+      tutorialStep: 1,
+      logs: ["Welcome to the tutorial! Follow the instructions to learn how to play."]
+    });
+  },
+  
+  nextTutorialStep: () => {
+    const { tutorialStep } = get();
+    set({ tutorialStep: tutorialStep + 1 });
   },
   
   selectCharacter: (char) => {
@@ -159,6 +249,15 @@ export const useCardGame = create<GameStore>((set, get) => ({
         }, 500);
       } else if (updatedEnemy.hp <= 0) {
         newState.logs.push(`Victory! You have defeated your opponent.`);
+        
+        // Unlock the first victory achievement
+        get().unlockAchievement('first_win');
+        
+        // Check for rare collector achievement
+        if (player.rarity === 'Legendary' || player.rarity === 'Mythic' || player.rarity === 'Divine') {
+          get().unlockAchievement('rare_collector');
+        }
+        
         setTimeout(() => {
           alert("Victory! You have vanquished your foe!");
           set({ gameState: "title", player: null, enemy: null, logs: [] });
@@ -193,6 +292,26 @@ export const useCardGame = create<GameStore>((set, get) => ({
     set(state => ({
       logs: [...state.logs, message]
     }));
+  },
+  
+  unlockAchievement: (id) => {
+    set(state => {
+      // Find the achievement and mark it as unlocked
+      const updatedAchievements = state.achievements.map(achievement => 
+        achievement.id === id ? { ...achievement, unlocked: true } : achievement
+      );
+      
+      // Show achievement unlock notification
+      const achievement = state.achievements.find(a => a.id === id);
+      if (achievement && !achievement.unlocked) {
+        // Only notify if it wasn't already unlocked
+        setTimeout(() => {
+          alert(`🏆 Achievement Unlocked: ${achievement.name}\n${achievement.description}`);
+        }, 1000);
+      }
+      
+      return { achievements: updatedAchievements };
+    });
   }
 }));
 
