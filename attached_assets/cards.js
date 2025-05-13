@@ -1,29 +1,77 @@
 // Define effect functions separately to avoid cloning issues
 const cardEffects = {
-  Burn: (playerCard, enemyCard, player, enemy) => enemy.hp -= 2,
-  Freeze: (playerCard, enemyCard, player, enemy) => enemyCard.power = Math.max(0, enemyCard.power - 2),
-  Steal: (playerCard, enemyCard, player, enemy) => playerCard.power = enemyCard.power,
-  Shield: (playerCard, enemyCard, player, enemy) => player.shield = true,
-  RevealHand: (playerCard, enemyCard, player, enemy, revealEnemyHand) => revealEnemyHand(),
+  Burn: (playerCard, enemyCard, player, enemy) => {
+    enemy.hp -= 2;
+    return "Burn effect deals 2 damage";
+  },
+  Freeze: (playerCard, enemyCard, player, enemy) => {
+    enemyCard.power = Math.max(0, enemyCard.power - 2);
+    return "Freeze effect reduces enemy power by 2";
+  },
+  Steal: (playerCard, enemyCard, player, enemy) => {
+    playerCard.power = enemyCard.power;
+    return "Copied enemy card's power";
+  },
+  Shield: (playerCard, enemyCard, player, enemy) => {
+    player.shield = true;
+    return "Shield activated";
+  },
+  RevealHand: (playerCard, enemyCard, player, enemy, revealEnemyHand) => {
+    revealEnemyHand();
+    return "Enemy hand revealed";
+  },
   DiceRoll: (playerCard, enemyCard, player, enemy) => {
     const roll = Math.floor(Math.random() * 6) + 1;
-    if (roll <= 2) enemy.hp -= 3;
-    else if (roll <= 4) enemy.hp -= 1;
-    else enemy.hp -= 5;
+    if (roll <= 2) {
+      enemy.hp -= 3;
+      return `Rolled ${roll}: Deals 3 damage`;
+    } else if (roll <= 4) {
+      enemy.hp -= 1;
+      return `Rolled ${roll}: Deals 1 damage`;
+    } else {
+      enemy.hp -= 5;
+      return `Rolled ${roll}: Deals 5 damage`;
+    }
   },
-  Shock: (playerCard, enemyCard, player, enemy) => enemyCard.power = 0,
-  Sturdy: (playerCard, enemyCard, player, enemy) => enemyCard.power = Math.max(0, enemyCard.power - 2),
-  Gust: (playerCard, enemyCard, player, enemy) => enemyCard.power -= 1,
-  Heal: (playerCard, enemyCard, player, enemy) => player.hp += 3,
-  Poison: (playerCard, enemyCard, player, enemy) => enemy.hp -= 3,
-  Protect: (playerCard, enemyCard, player, enemy) => player.shield = true,
+  Shock: (playerCard, enemyCard, player, enemy) => {
+    enemyCard.power = 0;
+    return "Enemy card power reduced to 0";
+  },
+  Sturdy: (playerCard, enemyCard, player, enemy) => {
+    enemyCard.power = Math.max(0, enemyCard.power - 2);
+    return "Reduced enemy power by 2";
+  },
+  Gust: (playerCard, enemyCard, player, enemy) => {
+    enemyCard.power -= 1;
+    return "Reduced enemy power by 1";
+  },
+  Heal: (playerCard, enemyCard, player, enemy) => {
+    player.hp += 3;
+    return "Healed 3 HP";
+  },
+  Poison: (playerCard, enemyCard, player, enemy) => {
+    enemy.hp -= 3;
+    return "Poison deals 3 damage";
+  },
+  Protect: (playerCard, enemyCard, player, enemy) => {
+    player.shield = true;
+    return "Protection shield activated";
+  },
   Spellcast: (playerCard, enemyCard, player, enemy) => {
     const spell = Math.floor(Math.random() * 3);
-    if (spell === 0) enemy.hp -= 3; // Fireball
-    else if (spell === 1) enemyCard.power = Math.max(0, enemyCard.power - 2); // Frost
-    else { enemy.hp -= 2; enemyCard.power = 0; } // Lightning
-  },
-  Summon: (playerCard, enemyCard, player, enemy) => {
+    if (spell === 0) {
+      enemy.hp -= 3;
+      return "Fireball deals 3 damage";
+    } else if (spell === 1) {
+      enemyCard.power = Math.max(0, enemyCard.power - 2);
+      return "Frost reduces enemy power by 2";
+    } else {
+      enemy.hp -= 2;
+      enemyCard.power = 0;
+      return "Lightning deals 2 damage and nullifies power";
+    }
+  }
+};
     const randomCard = cards[Math.floor(Math.random() * cards.length)];
     enemy.hp -= randomCard.power;
   },

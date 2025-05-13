@@ -680,8 +680,9 @@ export const useCardGame = create<GameStore>((set, get) => ({
         updatedEnemy.hand.push(drawCardFromDeck(updatedEnemy));
       }
       
-      newState.player.hand = newPlayerHand;
-      newState.enemy.hand = newEnemyHand;
+      // Hand updates are already handled by the deck drawing logic above
+      newState.player = updatedPlayer;
+      newState.enemy = updatedEnemy;
       
       return newState;
     });
@@ -846,19 +847,4 @@ function weightedRandomSelect(items: any[], weights: number[], k: number): any[]
   return selected;
 }
 
-// This function has been replaced with a more robust implementation directly in playCard
-// Keeping this as a reference but it's no longer used
-function applyEffect(playerCard: Card, enemyCard: Card, self: Character, opponent: Character, state: any): void {
-  if (playerCard.effect && typeof playerCard.effect === 'string') {
-    const effectKey = playerCard.effect as keyof typeof cardEffects;
-    if (cardEffects[effectKey]) {
-      try {
-        cardEffects[effectKey](playerCard, enemyCard, self, opponent, () => {
-          state.logs.push("Enemy hand revealed!");
-        });
-      } catch (error) {
-        console.error(`Error applying effect of ${playerCard.name}:`, error);
-      }
-    }
-  }
-}
+// Function removed as it's no longer used and causes TypeScript errors
